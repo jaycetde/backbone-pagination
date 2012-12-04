@@ -1,13 +1,17 @@
-'use strict';
+/* 
+ * backbone.pagination.js v0.9
+ * Copyright (C) 2012 Philipp Nolte
+ * backbone.pagination.js may be freely distributed under the MIT license.
+ */
 
-define([
-		'underscore'
-	,	'use!backbone'
+(function (global) {
 	
-	, 'backbone.fetchdefaults'
-], function (_, Backbone) {
+	'use strict';
+	
+	var Backbone	= global.Backbone
+		, _					= global._;
 
-	function pageFetchDefaults() {
+	function paginationFetchOptions() {
 		var data = {};
 
 		data[this.paginationConfig.page_attr] = this.currentPage;
@@ -15,7 +19,7 @@ define([
 
 		return { data: data };
 	}
-	
+
 	// Define the pagination enale method under the Pagination namespace.
 	Backbone.Pagination = {
 
@@ -25,7 +29,7 @@ define([
 			if (config) {
 				_.extend(collection.paginationConfig, config);
 			}
-			collection.setFetchDefaults(pageFetchDefaults);
+			collection.setFetchOptions(paginationFetchOptions);
 		}
 	};
 
@@ -57,12 +61,12 @@ define([
 		previousPage: function() {
 			this.loadPage(this.currentPage -1);
 		},
-		
-		fetchDefaults: pageFetchDefaults
+
+		_fetchOptions: [ paginationFetchOptions ]
 
 	};
 
 	// Provide a PaginatedCollection constructor that extends Backbone.Collection.
 	Backbone.PaginatedCollection = Backbone.Collection.extend(Backbone.Pagination.Paginator);
 	
-});
+})(this);
