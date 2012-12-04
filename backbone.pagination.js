@@ -8,8 +8,8 @@
 	
 	'use strict';
 	
-	var Backbone	= global.Backbone
-		, _					= global._;
+	var Backbone = global.Backbone
+		, _ = global._;
 
 	function paginationFetchOptions() {
 		var data = {};

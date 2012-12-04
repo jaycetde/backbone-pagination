@@ -1,194 +1,23 @@
-backbone-pagination V0.9
+backbone-pagination
 ========================
 
-This simple and lightweight (<1kb minified) pagination plugin for [Backbone.js](http://backbone.js) allows you to extend your ```Backbone.Collection```s with pagination functionality by modifying the collection's fetch url.
+This is an experimental remake of [backbone-pagination](https://github.com/ptnplanet/backbone-pagination). It removes the option to use pretty URLs and focuses on query parameters.
 
-These three methods are introduced:
+Please refer to [backbone-pagination](https://github.com/ptnplanet/backbone-pagination) for API help.
 
-* ```loadPage(pageNumber)```
-* ```nextPage()```
-* ```previousPage()```
+backbone.pagination depends on backbone.fetchoptions. I will provide a combined file soon.
 
-A typical REST api call with backbone-pagination will look like this:
+Fetch Options
+-------------
 
-    /sales?page=3&ipp=25
+Fetch Options provides the capability of setting the default options that are sent using collection.fetch(*options*).
 
-or with ```pretty``` set to ```true```:
+Until I add more documentation, please review the source code to see how it works
 
-    /sales/page/3/ipp/25
-
-```Backbone.PaginatedCollection``` is also provided as a convenience class. It extends ```Backbone.Collection``` and mixes in the methods described below.
-
-Dependencies
-------------
-
-The backbone-pagination plugin relies on
-* Backbone (tested with Backbone.js v0.9.2, but should work with most other versions)
-* Underscore.js
-* jQuery (as it uses the ```$.param()``` function)
-
-Using the Backbone.js plugin
-----------------------------
-
-If you are not using a module loading library you will want to include the source file into your webpage:
+How to use
+----------
 
 ```html
-<script type='text/javascript' src='/js/lib/modules/backbone-pagination.js'></script>
+<script src="backbone.fetchoptions.js"></script>
+<script src="backbone.pagination.js"></script>
 ```
-
-If you are using a module loading library like [Require.js](http://require.js) you can simply add it to your collection's dependencies.
-
-```javascript
-define(['app', 'plugins/backbone.pagination'], function(app) {
-    // Your module code.
-});
-```
-
-You probably want to make sure that the shim configuration is set correctly.
-
-```javascript
-require.config({
-    // Your path configuration goes here
-    shim: {
-        backbone: {
-        deps: ['underscore', 'jquery'],
-            exports: 'Backbone'
-        },
-        // Backbone.Pagination depends on Backbone.
-        'plugins/backbone.pagination' : ['backbone']
-    }
-});  
-```
-
-Extending your collection
--------------------------
-
-Extend your collection by calling the ```Backbone.Pagination.enable```method:
-
-```javascript
-var someCollection = Backbone.Collection.extend({
-    initialize: function(option) {
-        Backbone.Pagination.enable(this);
-    }
-});
-```
-
-The ```enable(collection, config)``` method takes an optional config parameter, that can be used to configure the paginator.
-
-You can also just initialize ```Backbone.PaginatedCollection```:
-
-```javascript
-var paginatedCollection = new Backbone.PaginatedCollection({
-    ipp: 10,
-    page_attr: "page",
-    ipp_attr: "per_page"
-});
-```
-
-Define your own paginated collections by extending ```Backbone.PaginatedCollection```:
-
-```javascript
-var MyPaginatedCollection = function() {};
-
-MyPaginatedCollection.prototype = _.extend({
-    baseUrl: "/collection/"
-}, Backbone.PaginatedCollection.prototype);
-```
-
-Configuring backbone.pagination
--------------------------------
-
-Configure the url params and items-per-page count at any time by setting the ```paginationConfig``` values:
-
-```javascript
-// default configuration
-someCollection.paginationConfig = {
-    pretty:       false,  // use pretty url params instead of query params
-  	ipp:          25,     // items per page
-  	page_attr:    'page', // the query's page attribute
-   	ipp_attr:     'ipp',  // the query's ipp attribute
-   	fetchOptions: {}      // any options passed to the fetch() method
-}
-```
-
-If the ```pretty``` attribute is set to ```true``` the resulting api call will result in ```/baseUrl/page/3/ipp/25``` instead of ```/baseUrl?page=3&ipp=25```.
-
-The ```fetchOptions``` attribute holds options, that will be passed to the ```Backbone.Collection.fetch()``` method. For example, if ```paginationConfig.fetchOptions.add``` is set to ```true```, then new items will be appended to the collection. ```false``` will replace the collection's items with any new items fetched. You can also define ```success``` and ```error``` callbacks. See the [Backbone.Collection.fetch() method's documentation](http://backbonejs.org/#Collection-fetch).
-
-Providing a ```url()``` method
-------------------------------
-
-backbone.pagination overrides the Backbone.Collection.url method in order to append the pagination params. Instead of setting the ```url``` property you will have to introduce a ```baseUrl``` property.
-
-API
----
-
-After enabling pagination on your collection, the following methods and attributes become available:
-
-* ```currentPage``` holds the last fetched page number. Do not modify this attribute. Instead call one of the following ```xxxPage()``` methods:
-* ```loadPage(pageNumber)``` will fetch the page number specified
-* ```nextPage()``` will fetch the next page
-* ```previousPage()``` will fetch the previous page – or fetch the first page if a call to this method would result in a negative or zero page number
-* ```url()``` pagination url method will produce a custom pagination url like ```/baseUrl?page=3&ipp=25``` or ```/baseUrl/page/3/ipp/25``` with ```pretty``` set to ```true```
-* ```baseUrl``` or ```baseUrl()``` you should specify either a ```baseUrl``` attribute or method that returns the collection's base url.
-* ```paginationConfig``` see [Configuring backbone.pagination](#configuring-backbonepagination)
-
-Example
--------
-
-This example uses require.js to define a module providing a sales collection of sale models.
-
-```javascript
-define([
-	// Application.
-	'app',
-
-	// Backbone.
-	'backbone',
-
-	// Plugins.
-	'plugins/backbone.pagination',
-],
-
-// Map dependencies from above array.
-function(app, Backbone) {
-
-	// Create a new module.
-	var Sales = {};
-
-	// The basic **sales** model.
-	Sales.Model = Backbone.Model.extend({
-
-		// Sync with this api url.
-		url: 'sales/sale/id'
-	});
-
-	// Default collection.
-	Sales.List = Backbone.Collection.extend({
-
-		// Use this model class for collection items.
-		model: Sales.Model,
-
-		// Sync with this api url.  This method is called baseUrl because,
-		// the Backbone.Collection.url method will be overwritten by the
-		// pagination module.
-		baseUrl: function() {
-			return app.api + 'sales/list/city/' + this.city;
-		},
-
-		initialize: function(options) {
-			// Enable pagination.
-			Backbone.Pagination.enable(this, {
-				ipp: 10,
-				fetchOptions: {
-					add: true  // instead of replacing the collection's model items, append new items
-				}
-			});
-		}
-	});
-
-	// Return the module for AMD compliance.
-	return Sales;
-});
-```
-
